@@ -15,16 +15,16 @@ export const generateIdeas = async (
   const systemInstructions = `
     你是一个顶级的创意顾问。
     目标：${goal}
-    模式：${mode}
+    模式：${mode} (请严格遵守该思维模式的逻辑：SCAMPER代表替代、合并、改进等；SIX_HATS代表六顶思考帽平行思维；RANDOM代表随机碰撞)
     数量：请生成 ${count} 个创意。
     语言：必须使用中文。
     
     规则：
-    1. 创意需具备落地性与独特性。
+    1. 每个创意标题必须精炼，内容必须包含具体的执行痛点或亮点。
     2. 返回 JSON 格式。
   `;
 
-  const prompt = `基于上下文生成 ${count} 个创意。上下文：${context}`;
+  const prompt = `基于用户输入的构想：“${context}”，在当前脑暴模式下生成 ${count} 个相关联但具备差异化的创意点子。`;
 
   const response = await ai.models.generateContent({
     model: modelName,
@@ -49,19 +49,28 @@ export const generateIdeas = async (
   });
 
   try {
-    return JSON.parse(response.text);
+    const text = response.text || "[]";
+    return JSON.parse(text);
   } catch (e) {
+    console.error("Failed to parse AI Ideas", e);
     return [];
   }
 };
 
 export const generatePRD = async (ideaTitle: string, ideaContent: string) => {
   const modelName = 'gemini-3-pro-preview';
-  const prompt = `为以下创意编写一份专业的需求文档（PRD）：
+  const prompt = `为以下构想编写一份专业且具备实操价值的通用需求文档（PRD）：
     标题：${ideaTitle}
     描述：${ideaContent}
     
-    要求包含：产品概述、目标用户、核心功能、技术可行性、风险评估。
+    必须包含以下结构：
+    1. 产品愿景与核心价值
+    2. 目标用户画像与痛点
+    3. 核心功能路线图
+    4. 业务逻辑与主要流程
+    5. 性能与成功指标
+    6. 风险评估与对策
+    
     语言：中文。使用 Markdown 结构。
   `;
 
@@ -69,27 +78,28 @@ export const generatePRD = async (ideaTitle: string, ideaContent: string) => {
     model: modelName,
     contents: prompt,
     config: {
-      systemInstruction: "你是一个资深产品经理，擅长编写逻辑严密的需求文档。返回纯文本 Markdown 格式。",
+      systemInstruction: "你是一个资深产品经理，擅长编写逻辑严密、结构清晰的PRD。返回纯文本 Markdown 格式。",
     }
   });
 
-  return response.text;
+  return response.text || "生成失败，请重试。";
 };
 
 export const generateWebPRD = async (originalPRD: string) => {
-  const modelName = 'gemini-3-pro-preview';
-  const prompt = `请将以下通用需求文档（PRD）转换为专门针对 **Web 网站实现** 的技术需求文档。
+  const modelName = 'gemini-3-flash-preview';
+  const prompt = `请深度分析以下通用需求文档（PRD），并将其转化为一份详尽的 **Web 网站技术落地文档**。
     
     原始内容：
     ${originalPRD}
     
-    要求包含以下 Web 特有部分：
-    1. Web 功能清单：具体到页面的功能点。
-    2. UI/UX 规范：视觉风格建议、Web 交互逻辑。
-    3. 前端技术选型：框架、库、响应式策略。
-    4. 性能与 SEO 优化建议。
-    5. 浏览器兼容性要求。
+    必须涵盖 Web 特有的实现细节：
+    1. 网站架构设计：前端选用框架 (如 React/Next.js)、状态管理、API 交互。
+    2. 核心页面原型描述：页面层级、每个页面的核心功能点。
+    3. UI/UX 视觉规范：针对 Web 端的主题色、排版、交互动效建议。
+    4. 核心 Web 功能实现方案：如复杂组件逻辑。
+    5. 性能、SEO 及 跨平台响应式策略。
     
+    要求：深度结合 Web 平台的特性，而非笼统描述。
     语言：中文。使用 Markdown 格式。
   `;
 
@@ -97,16 +107,16 @@ export const generateWebPRD = async (originalPRD: string) => {
     model: modelName,
     contents: prompt,
     config: {
-      systemInstruction: "你是一个资深 Web 架构师和产品经理，专注于 Web 端的体验和实现细节。返回纯文本 Markdown 格式。",
+      systemInstruction: "你是一个资深 Web 架构师，专注于将业务需求转化为高质量的技术实现路径。返回纯文本 Markdown 格式。",
     }
   });
 
-  return response.text;
+  return response.text || "网站技术文档生成失败，请重试。";
 };
 
 export const expandIdea = async (ideaTitle: string, ideaContent: string) => {
   const modelName = 'gemini-3-flash-preview';
-  const prompt = `扩展创意：
+  const prompt = `细化创意：
     标题：${ideaTitle}
     内容：${ideaContent}
   `;
@@ -115,7 +125,7 @@ export const expandIdea = async (ideaTitle: string, ideaContent: string) => {
     model: modelName,
     contents: prompt,
     config: {
-      systemInstruction: "将创意细化为具体方案。返回 JSON。",
+      systemInstruction: "将创意拆解为具体的执行清单。返回 JSON。",
       responseMimeType: "application/json",
       responseSchema: {
         type: Type.OBJECT,
@@ -136,5 +146,9 @@ export const expandIdea = async (ideaTitle: string, ideaContent: string) => {
     }
   });
 
-  return JSON.parse(response.text);
+  try {
+    return JSON.parse(response.text || "{}");
+  } catch (e) {
+    return { executionSteps: [], variants: [] };
+  }
 };

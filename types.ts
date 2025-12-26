@@ -75,28 +75,28 @@ export type ViewType = 'session' | 'history' | 'favorites' | 'mindmap' | 'wordcl
 
 export const MODES_CONFIG = {
   [BrainstormMode.FREE]: {
-    name: '自由脑暴',
-    description: '无限制捕捉灵感',
+    name: '自由',
+    description: '无拘无束',
     icon: '💡'
   },
   [BrainstormMode.SCAMPER]: {
-    name: 'SCAMPER 法',
-    description: '通过替代、合并、改进激发创意',
+    name: '重构',
+    description: '替代/合并',
     icon: '🔄'
   },
   [BrainstormMode.SIX_HATS]: {
-    name: '六顶思考帽',
-    description: '多维度的平行思考模式',
+    name: '视角',
+    description: '六顶帽',
     icon: '🎩'
   },
   [BrainstormMode.RANDOM]: {
-    name: '随机刺激',
-    description: '利用随机关键词打破思维僵局',
+    name: '碰撞',
+    description: '随机触发',
     icon: '🎲'
   },
   [BrainstormMode.SCENARIO]: {
-    name: '场景模拟',
-    description: '基于用户画像的针对性方案',
+    name: '场景',
+    description: '用户模拟',
     icon: '🌍'
   }
 };
